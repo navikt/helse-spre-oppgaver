@@ -1,7 +1,7 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: spre-arbeidsgiver
+  name: spre-oppgaver
   namespace: default
   labels:
     team: tbd
@@ -32,7 +32,15 @@ spec:
     enabled: true
     paths:
       - mountPath: /var/run/secrets/nais.io/vault
-        kvPath: /serviceuser/data/dev/srvsprearbeidsgiver
+        kvPath: /serviceuser/data/dev/srvspreoppgaver
   env:
     - name: KAFKA_BOOTSTRAP_SERVERS
       value: b27apvl00045.preprod.local:8443,b27apvl00046.preprod.local:8443,b27apvl00047.preprod.local:8443
+    - name: DATABASE_HOST
+      value: b27dbvl009.preprod.local
+    - name: DATABASE_PORT
+      value: "5432"
+    - name: DATABASE_NAME
+      value: spre-oppgaver
+    - name: VAULT_MOUNTPATH
+      value: postgresql/preprod-fss/

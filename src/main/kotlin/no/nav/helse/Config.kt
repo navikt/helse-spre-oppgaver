@@ -32,7 +32,7 @@ fun setUpEnvironment() =
 data class Environment(
     val kafkaBootstrapServers: String,
     val rapidTopic: String = "helse-rapid-v1",
-    val sprearbeidsgivertopic: String = "aapen-helse-spre-arbeidsgiver"
+    val sprearbeidsgivertopic: String = "aapen-helse-spre-oppgaver"
 )
 
 data class ServiceUser(

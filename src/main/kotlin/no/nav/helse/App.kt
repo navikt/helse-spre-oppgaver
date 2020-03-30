@@ -16,15 +16,13 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -54,22 +52,16 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 
     val rapidConsumer =
         KafkaConsumer<ByteArray, JsonNode?>(loadBaseConfig(environment, serviceUser).toConsumerConfig())
-    val arbeidsgiverProducer =
-        KafkaProducer<String, TrengerInntektsmeldingDTO>(loadBaseConfig(environment, serviceUser).toProducerConfig())
+    val oppgaveProducer =
+        KafkaProducer<String, OppgaveDTO>(loadBaseConfig(environment, serviceUser).toProducerConfig())
 
     rapidConsumer
         .subscribe(listOf(environment.rapidTopic))
 
     rapidConsumer.asFlow()
-        .inntektsmeldingFlow()
         .catch {
             server.stop(10, 10, TimeUnit.SECONDS)
             throw it
-        }
-        .collect { value ->
-            arbeidsgiverProducer.send(ProducerRecord(environment.sprearbeidsgivertopic, value.fødselsnummer, value))
-                .get()
-                .also { log.info("Publiserer behov for inntektsmelding") }
         }
 
     Runtime.getRuntime().addShutdownHook(Thread {
@@ -77,39 +69,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     })
 }
 
-fun JsonNode.validerFelt(felt: String) = if (hasNonNull(felt)) true else {
-    log.warn("Melding mangler felt \"$felt\"")
-    false
-}
-
-fun Flow<Pair<ByteArray, JsonNode?>>.inntektsmeldingFlow() = this
-    .map { it.second }
-    .filterNotNull()
-    .filter { value ->
-        value["@event_name"].asText() == "trenger_inntektsmelding"
-    }
-    .filter {
-        it.validerFelt("organisasjonsnummer")
-            && it.validerFelt("fødselsnummer")
-            && it.validerFelt("fom")
-            && it.validerFelt("tom")
-            && it.validerFelt("opprettet")
-    }
-    .onEach { value -> log.info("Ber om inntektsmelding på vedtaksperiode: {}", value["vedtaksperiodeId"].asText()) }
-    .map { value ->
-        TrengerInntektsmeldingDTO(
-            organisasjonsnummer = value["organisasjonsnummer"].asText(),
-            fødselsnummer = value["fødselsnummer"].asText(),
-            fom = LocalDate.parse(value["fom"].asText()),
-            tom = LocalDate.parse(value["tom"].asText()),
-            opprettet = LocalDateTime.parse(value["opprettet"].asText())
-        )
-    }
-
-data class TrengerInntektsmeldingDTO(
-    val organisasjonsnummer: String,
-    val fødselsnummer: String,
-    val fom: LocalDate,
-    val tom: LocalDate,
-    val opprettet: LocalDateTime
+data class OppgaveDTO(
+    val type: String,
+    val dokumentId: UUID
 )

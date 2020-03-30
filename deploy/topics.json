@@ -4,11 +4,11 @@
             "configEntries": {},
             "members": [
                 {
-                    "member": "srvsprearbeidsgiver",
+                    "member": "srvspreoppgaver",
                     "role": "PRODUCER"
                 },
                 {
-                    "member": "srvsprearbeidsgiver",
+                    "member": "srvspreoppgaver",
                     "role": "CONSUMER"
                 },
                 {
@@ -25,7 +25,7 @@
                 }
             ],
             "numPartitions": 1,
-            "topicName": "aapen-helse-spre-arbeidsgiver"
+            "topicName": "aapen-helse-spre-oppgaver"
         }
     ]
 }

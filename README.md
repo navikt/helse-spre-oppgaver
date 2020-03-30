@@ -1,9 +1,10 @@
-# helse-spre-arbeidsgiver
+# helse-spre-oppgaver
 
 ## Beskrivelse
-Leser interne meldinger og republiserer til arbeidsgiver
+Styrer oppretting av oppgaver i gosys
 
 ## Kjøretidsavhengigheter
 
 * JDK 12
 * Kafka
+* Postgres
