@@ -1,0 +1,31 @@
+{
+    "topics": [
+        {
+            "configEntries": {},
+            "members": [
+                {
+                    "member": "srvsprearbeidsgiver",
+                    "role": "PRODUCER"
+                },
+                {
+                    "member": "srvsprearbeidsgiver",
+                    "role": "CONSUMER"
+                },
+                {
+                    "member": "N143409",
+                    "role": "MANAGER"
+                },
+                {
+                    "member": "S151890",
+                    "role": "MANAGER"
+                },
+                {
+                    "member": "R154509",
+                    "role": "MANAGER"
+                }
+            ],
+            "numPartitions": 1,
+            "topicName": "aapen-helse-spre-arbeidsgiver"
+        }
+    ]
+}
