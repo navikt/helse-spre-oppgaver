@@ -87,7 +87,9 @@ fun Flow<Pair<String, JsonNode>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
 fun håndter(input: RiverInput, oppgaveDAO: OppgaveDAO): Oppgave? {
     return when (input) {
         is RiverInput.NyttDokument -> {
-            oppgaveDAO.opprettOppgave(input.hendelseId, input.dokumentId)
+            if (oppgaveDAO.finnOppgave(input.hendelseId) == null) {
+                oppgaveDAO.opprettOppgave(input.hendelseId, input.dokumentId)
+            }
             null
         }
         is RiverInput.Tilstandsendring -> {

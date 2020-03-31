@@ -50,10 +50,60 @@ class AppTest {
     fun `spleis håndterer et helt sykeforløp`() = runBlocking<Unit> {
         val søknad1HendelseId = UUID.randomUUID()
         val søknad1DokumentId = UUID.randomUUID()
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingDokumentId = UUID.randomUUID()
+
         val result = listOf(
             sendtSøknad(søknad1HendelseId, søknad1DokumentId),
             tilstandsendring(listOf(søknad1HendelseId), "AVVENTER_INNTEKTSMELDING_FERDIG_GAP"),
-            tilstandsendring(listOf(søknad1HendelseId), "AVVENTER_VILKÅRSPRØVING_ARBEIDSGIVERSØKNAD"),
+            inntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId),
+            tilstandsendring(listOf(søknad1HendelseId, inntektsmeldingHendelseId), "AVVENTER_SIMULERING"),
+            tilstandsendring(
+                listOf(søknad1HendelseId, inntektsmeldingHendelseId),
+                "AVVENTER_VILKÅRSPRØVING_ARBEIDSGIVERSØKNAD"
+            ),
+            tilstandsendring(listOf(søknad1HendelseId, inntektsmeldingHendelseId), "AVSLUTTET")
+        ).asFlow()
+            .oppgaveFlow(oppgaveDAO)
+            .toList()
+
+        val expected = listOf(
+            Oppgave(
+                hendelseId = søknad1HendelseId,
+                dokumentId = søknad1DokumentId,
+                tilstand = DatabaseTilstand.SpleisLest
+            ),
+            Oppgave(
+                hendelseId = inntektsmeldingHendelseId,
+                dokumentId = inntektsmeldingDokumentId,
+                tilstand = DatabaseTilstand.SpleisLest
+            ),
+            Oppgave(
+                hendelseId = søknad1HendelseId,
+                dokumentId = søknad1DokumentId,
+                tilstand = DatabaseTilstand.SpleisFerdigbehandlet
+            ),
+            Oppgave(
+                hendelseId = inntektsmeldingHendelseId,
+                dokumentId = inntektsmeldingDokumentId,
+                tilstand = DatabaseTilstand.SpleisFerdigbehandlet
+            )
+        )
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `spleis replayer søknad`() = runBlocking<Unit>{
+        val søknad1HendelseId = UUID.randomUUID()
+        val søknad1DokumentId = UUID.randomUUID()
+
+        val result = listOf(
+            sendtSøknad(søknad1HendelseId, søknad1DokumentId),
+            tilstandsendring(listOf(søknad1HendelseId), "AVVENTER_INNTEKTSMELDING_FERDIG_GAP"),
+            tilstandsendring(listOf(søknad1HendelseId), "AVSLUTTET"),
+
+            sendtSøknad(søknad1HendelseId, søknad1DokumentId),
+            tilstandsendring(listOf(søknad1HendelseId), "AVVENTER_INNTEKTSMELDING_FERDIG_GAP"),
             tilstandsendring(listOf(søknad1HendelseId), "AVSLUTTET")
         ).asFlow()
             .oppgaveFlow(oppgaveDAO)
@@ -82,6 +132,17 @@ class AppTest {
             "@event_type" to "sendt_søknad_nav",
             "@id" to hendelseId,
             "id" to dokumentId
+        )
+    )
+
+    fun inntektsmelding(
+        hendelseId: UUID,
+        dokumentId: UUID
+    ): Pair<String, JsonNode> = "fnr" to objectMapper.convertValue(
+        mapOf(
+            "@event_type" to "inntektsmelding",
+            "@id" to hendelseId,
+            "inntektsmeldingId" to dokumentId
         )
     )
 
