@@ -124,6 +124,56 @@ class AppTest {
         assertEquals(expected, result)
     }
 
+    @Test
+    fun `spleis gir opp behandling av søknad`() = runBlocking<Unit>{
+        val søknad1HendelseId = UUID.randomUUID()
+        val søknad1DokumentId = UUID.randomUUID()
+
+        val result = listOf(
+            sendtSøknad(søknad1HendelseId, søknad1DokumentId),
+            tilstandsendring(listOf(søknad1HendelseId), "TIL_INFOTRYGD")
+        ).asFlow()
+            .oppgaveFlow(oppgaveDAO)
+            .toList()
+
+        val expected = listOf(
+            Oppgave(
+                hendelseId = søknad1HendelseId,
+                dokumentId = søknad1DokumentId,
+                tilstand = DatabaseTilstand.LagOppgave
+            )
+        )
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `spleis gir opp behandling i vilkårsprøving`() = runBlocking<Unit>{
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingDokumentId = UUID.randomUUID()
+
+        val result = listOf(
+            inntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId),
+            tilstandsendring(listOf(inntektsmeldingHendelseId), "AVVENTER_VILKÅRSPRØVING"),
+            tilstandsendring(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD")
+        ).asFlow()
+            .oppgaveFlow(oppgaveDAO)
+            .toList()
+
+        val expected = listOf(
+            Oppgave(
+                hendelseId = inntektsmeldingHendelseId,
+                dokumentId = inntektsmeldingDokumentId,
+                tilstand = DatabaseTilstand.SpleisLest
+            ),
+            Oppgave(
+                hendelseId = inntektsmeldingHendelseId,
+                dokumentId = inntektsmeldingDokumentId,
+                tilstand = DatabaseTilstand.LagOppgave
+            )
+        )
+        assertEquals(expected, result)
+    }
+
     fun sendtSøknad(
         hendelseId: UUID,
         dokumentId: UUID = UUID.randomUUID()

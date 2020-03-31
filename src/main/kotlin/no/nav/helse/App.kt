@@ -133,6 +133,7 @@ sealed class RiverInput {
         val tilstand: String
     ) : RiverInput() {
         override val tilTilstand: DatabaseTilstand = when (tilstand) {
+            "TIL_INFOTRYGD" -> DatabaseTilstand.LagOppgave
             "AVSLUTTET" -> DatabaseTilstand.SpleisFerdigbehandlet
             else -> DatabaseTilstand.SpleisLest
         }
