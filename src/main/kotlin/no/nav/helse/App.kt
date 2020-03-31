@@ -16,13 +16,20 @@ import io.micrometer.prometheus.PrometheusMeterRegistry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +39,7 @@ val objectMapper: ObjectMapper = jacksonObjectMapper()
     .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true)
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     .registerModule(JavaTimeModule())
-val log: Logger = LoggerFactory.getLogger("sprearbeidsgiver")
+val log: Logger = LoggerFactory.getLogger("spreoppgaver")
 
 @ExperimentalCoroutinesApi
 @FlowPreview
@@ -67,6 +74,74 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     Runtime.getRuntime().addShutdownHook(Thread {
         server.stop(10, 10, TimeUnit.SECONDS)
     })
+}
+
+fun Flow<Pair<String, JsonNode>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
+    .map { (_, value) -> value }
+    .filterNotNull()
+    .filter { it["@event_type"].asText() in listOf("sendt_søknad_nav", "inntektsmelding", "vedtaksperiode_endret") }
+    .flatMapConcat { konverterTilRiverInput(it).asFlow() }
+    .map { håndter(it, oppgaveDAO) }
+    .filterNotNull()
+
+fun håndter(input: RiverInput, oppgaveDAO: OppgaveDAO): Oppgave? {
+    return when (input) {
+        is RiverInput.NyttDokument -> {
+            oppgaveDAO.opprettOppgave(input.hendelseId, input.dokumentId)
+            null
+        }
+        is RiverInput.Tilstandsendring -> {
+            val oppgave = oppgaveDAO.finnOppgave(input.hendelseId) ?: return null
+            if (oppgave.tilstand.godtarOvergang(input.tilTilstand)) {
+                oppgaveDAO.oppdaterTilstand(input.hendelseId, input.tilTilstand)
+                oppgave.copy(tilstand = input.tilTilstand)
+            } else {
+                null
+            }
+        }
+    }
+}
+
+fun konverterTilRiverInput(node: JsonNode): List<RiverInput> {
+    val eventType = node["@event_type"].asText()
+    return when (eventType) {
+        "sendt_søknad_nav" -> listOf(RiverInput.NyttDokument(
+            hendelseId = UUID.fromString(node["@id"].asText()),
+            dokumentId = UUID.fromString(node["id"].asText())
+        ))
+        "inntektsmelding" -> listOf(RiverInput.NyttDokument(
+            hendelseId = UUID.fromString(node["@id"].asText()),
+            dokumentId = UUID.fromString(node["inntektsmeldingId"].asText())
+        ))
+        "vedtaksperiode_endret" -> node["hendelser"].map {
+            RiverInput.Tilstandsendring(
+                hendelseId = UUID.fromString(it.asText()),
+                tilstand = node["gjeldendeTilstand"].asText()
+            )
+        }
+        else -> error("Prøver å tolke en event-type vi ikke forstår: $eventType")
+    }
+}
+
+sealed class RiverInput {
+    abstract val tilTilstand: DatabaseTilstand
+
+    data class Tilstandsendring(
+        val hendelseId: UUID,
+        val tilstand: String
+    ) : RiverInput() {
+        override val tilTilstand: DatabaseTilstand = when (tilstand) {
+            "AVSLUTTET" -> DatabaseTilstand.SpleisFerdigbehandlet
+            else -> DatabaseTilstand.SpleisLest
+        }
+    }
+
+    data class NyttDokument(
+        val hendelseId: UUID,
+        val dokumentId: UUID
+    ) : RiverInput() {
+        override val tilTilstand: DatabaseTilstand = DatabaseTilstand.DokumentOppdaget
+    }
 }
 
 data class OppgaveDTO(

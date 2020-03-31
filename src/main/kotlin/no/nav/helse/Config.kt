@@ -32,7 +32,7 @@ fun setUpEnvironment() =
 data class Environment(
     val kafkaBootstrapServers: String,
     val rapidTopic: String = "helse-rapid-v1",
-    val sprearbeidsgivertopic: String = "aapen-helse-spre-oppgaver"
+    val spreoppgaverTopic: String = "aapen-helse-spre-oppgaver"
 )
 
 data class ServiceUser(
@@ -57,7 +57,7 @@ fun loadBaseConfig(env: Environment, serviceUser: ServiceUser): Properties = Pro
 
 fun Properties.toConsumerConfig(): Properties = Properties().also {
     it.putAll(this)
-    it[ConsumerConfig.GROUP_ID_CONFIG] = "spre-arbeidsgiver-v1"
+    it[ConsumerConfig.GROUP_ID_CONFIG] = "spre-oppgaver-v1"
     it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "latest"
     it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = ByteArrayDeserializer::class.java
     it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = TrengerInntektsmeldingDeserializer::class.java
@@ -67,7 +67,7 @@ fun Properties.toConsumerConfig(): Properties = Properties().also {
 fun Properties.toProducerConfig(): Properties = Properties().also {
     it.putAll(this)
     it[ProducerConfig.ACKS_CONFIG] = "all"
-    it[ProducerConfig.CLIENT_ID_CONFIG] = "spre-arbeidsgiver-v1"
+    it[ProducerConfig.CLIENT_ID_CONFIG] = "spre-oppgaver-v1"
     it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
     it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = TrengerInntektsmeldingSerializer::class.java
 }

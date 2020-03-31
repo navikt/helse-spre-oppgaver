@@ -35,4 +35,13 @@ class OppgaveDAO(
         )
     }
 
+    fun oppdaterTilstand(hendelseId: UUID, tilTilstand: DatabaseTilstand) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                "UPDATE oppgave_tilstand SET tilstand=CAST(? AS tilstand_type) WHERE hendelse_id=?;",
+                tilTilstand.name, hendelseId
+            ).asUpdate
+        )
+    }
+
 }
