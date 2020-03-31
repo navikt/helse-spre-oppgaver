@@ -36,6 +36,11 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("net.logstash.logback:logstash-logback-encoder:6.2")
 
+    implementation("com.zaxxer:HikariCP:3.4.2")
+    implementation("no.nav:vault-jdbc:1.3.7")
+    implementation("org.flywaydb:flyway-core:6.2.4")
+    implementation("com.github.seratch:kotliquery:1.3.1")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
@@ -47,6 +52,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation ("com.nimbusds:nimbus-jose-jwt:7.5.1")
+    testImplementation("com.opentable.components:otj-pg-embedded:0.13.3")
 }
 
 java {
