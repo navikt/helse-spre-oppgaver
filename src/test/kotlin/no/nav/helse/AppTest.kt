@@ -170,7 +170,8 @@ class AppTest {
         mapOf(
             "@event_type" to "vedtaksperiode_endret",
             "hendelser" to hendelseIder,
-            "gjeldendeTilstand" to gjeldendeTilstand
+            "gjeldendeTilstand" to gjeldendeTilstand,
+            "vedtaksperiodeId" to UUID.randomUUID()
         )
     )
 }

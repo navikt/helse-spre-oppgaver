@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -88,9 +90,24 @@ fun Flow<Pair<String, JsonNode?>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
     .map { (_, value) -> value }
     .filterNotNull()
     .filter { it["@event_type"].asText() in listOf("sendt_søknad_nav", "inntektsmelding", "vedtaksperiode_endret") }
-    .flatMapConcat { konverterTilRiverInput(it).asFlow() }
+    .onEach {
+        log.info(
+            "Innkommende hendelse med {} og {}",
+            keyValue("type", it["@event_type"].asText()),
+            keyValue("referanse", it["@id"]?.asText() ?: it["vedtaksperiodeId"].asText())
+        )
+    }
+    .flatMapConcat { hendelse(it).asFlow() }
     .map { håndter(it, oppgaveDAO) }
     .filterNotNull()
+    .onEach {
+        log.info(
+            "Oppgave har endret status: {}, {}, {}, timeout: ${it.timeout}",
+            keyValue("dokumentId", it.dokumentId),
+            keyValue("oppdateringstype", it.oppdateringstype),
+            keyValue("dokumenttype", it.dokumentType)
+        )
+    }
 
 fun håndter(input: Hendelse, oppgaveDAO: OppgaveDAO): OppgaveDTO? {
     return when (input) {
@@ -125,7 +142,7 @@ private fun DatabaseTilstand.toDTO(): OppdateringstypeDTO = when (this) {
 }
 
 
-fun konverterTilRiverInput(node: JsonNode) = when (val eventType = node["@event_type"].asText()) {
+fun hendelse(node: JsonNode) = when (val eventType = node["@event_type"].asText()) {
     "sendt_søknad_nav" -> listOf(
         Hendelse.NyttDokument(
             hendelseId = UUID.fromString(node["@id"].asText()),
