@@ -8,7 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
-import org.apache.kafka.common.serialization.ByteArrayDeserializer
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -59,8 +59,8 @@ fun Properties.toConsumerConfig(): Properties = Properties().also {
     it.putAll(this)
     it[ConsumerConfig.GROUP_ID_CONFIG] = "spre-oppgaver-v1"
     it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "latest"
-    it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = ByteArrayDeserializer::class.java
-    it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = TrengerInntektsmeldingDeserializer::class.java
+    it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+    it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonDeserializer::class.java
     it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1000"
 }
 
@@ -69,5 +69,5 @@ fun Properties.toProducerConfig(): Properties = Properties().also {
     it[ProducerConfig.ACKS_CONFIG] = "all"
     it[ProducerConfig.CLIENT_ID_CONFIG] = "spre-oppgaver-v1"
     it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
-    it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = TrengerInntektsmeldingSerializer::class.java
+    it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonSerializer::class.java
 }

@@ -50,9 +50,13 @@ internal class OppgaveDAOTest {
     fun `finner en eksisterende oppgave`() {
         val hendelseId = UUID.randomUUID()
         val dokumentId = UUID.randomUUID()
-        oppgaveDAO.opprettOppgave(hendelseId = hendelseId, dokumentId = dokumentId)
+        oppgaveDAO.opprettOppgave(
+            hendelseId = hendelseId,
+            dokumentId = dokumentId,
+            dokumentType = DokumentType.Søknad
+        )
         assertEquals(
-            Oppgave(hendelseId = hendelseId, dokumentId = dokumentId, tilstand = DatabaseTilstand.DokumentOppdaget),
+            Oppgave(hendelseId = hendelseId, dokumentId = dokumentId, tilstand = DatabaseTilstand.DokumentOppdaget, dokumentType = DokumentType.Søknad),
             oppgaveDAO.finnOppgave(hendelseId)
         )
     }

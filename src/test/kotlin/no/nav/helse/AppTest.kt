@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AppTest {
@@ -67,29 +66,26 @@ class AppTest {
             .oppgaveFlow(oppgaveDAO)
             .toList()
 
-        val expected = listOf(
-            Oppgave(
-                hendelseId = søknad1HendelseId,
-                dokumentId = søknad1DokumentId,
-                tilstand = DatabaseTilstand.SpleisLest
-            ),
-            Oppgave(
-                hendelseId = inntektsmeldingHendelseId,
-                dokumentId = inntektsmeldingDokumentId,
-                tilstand = DatabaseTilstand.SpleisLest
-            ),
-            Oppgave(
-                hendelseId = søknad1HendelseId,
-                dokumentId = søknad1DokumentId,
-                tilstand = DatabaseTilstand.SpleisFerdigbehandlet
-            ),
-            Oppgave(
-                hendelseId = inntektsmeldingHendelseId,
-                dokumentId = inntektsmeldingDokumentId,
-                tilstand = DatabaseTilstand.SpleisFerdigbehandlet
-            )
+        assertOppgave(OppdateringstypeDTO.Utsett, søknad1DokumentId, DokumentTypeDTO.Søknad, result[0])
+        assertOppgave(OppdateringstypeDTO.Utsett, inntektsmeldingDokumentId, DokumentTypeDTO.Inntektsmelding, result[1])
+        assertOppgave(OppdateringstypeDTO.Ferdigbehandlet, søknad1DokumentId, DokumentTypeDTO.Søknad, result[2])
+        assertOppgave(
+            OppdateringstypeDTO.Ferdigbehandlet,
+            inntektsmeldingDokumentId,
+            DokumentTypeDTO.Inntektsmelding,
+            result[3]
         )
-        assertEquals(expected, result)
+    }
+
+    private fun assertOppgave(
+        oppdateringstypeDTO: OppdateringstypeDTO,
+        dokumentId: UUID,
+        dokumentType: DokumentTypeDTO,
+        oppgaveDTO: OppgaveDTO
+    ) {
+        assertEquals(dokumentId, oppgaveDTO.dokumentId)
+        assertEquals(dokumentType, oppgaveDTO.dokumentType)
+        assertEquals(oppdateringstypeDTO, oppgaveDTO.oppdateringstype)
     }
 
     @Test
@@ -109,19 +105,8 @@ class AppTest {
             .oppgaveFlow(oppgaveDAO)
             .toList()
 
-        val expected = listOf(
-            Oppgave(
-                hendelseId = søknad1HendelseId,
-                dokumentId = søknad1DokumentId,
-                tilstand = DatabaseTilstand.SpleisLest
-            ),
-            Oppgave(
-                hendelseId = søknad1HendelseId,
-                dokumentId = søknad1DokumentId,
-                tilstand = DatabaseTilstand.SpleisFerdigbehandlet
-            )
-        )
-        assertEquals(expected, result)
+        assertOppgave(OppdateringstypeDTO.Utsett, søknad1DokumentId, DokumentTypeDTO.Søknad, result[0])
+        assertOppgave(OppdateringstypeDTO.Ferdigbehandlet, søknad1DokumentId, DokumentTypeDTO.Søknad, result[1])
     }
 
     @Test
@@ -136,14 +121,7 @@ class AppTest {
             .oppgaveFlow(oppgaveDAO)
             .toList()
 
-        val expected = listOf(
-            Oppgave(
-                hendelseId = søknad1HendelseId,
-                dokumentId = søknad1DokumentId,
-                tilstand = DatabaseTilstand.LagOppgave
-            )
-        )
-        assertEquals(expected, result)
+        assertOppgave(OppdateringstypeDTO.Opprett, søknad1DokumentId, DokumentTypeDTO.Søknad, result[0])
     }
 
     @Test
@@ -159,19 +137,8 @@ class AppTest {
             .oppgaveFlow(oppgaveDAO)
             .toList()
 
-        val expected = listOf(
-            Oppgave(
-                hendelseId = inntektsmeldingHendelseId,
-                dokumentId = inntektsmeldingDokumentId,
-                tilstand = DatabaseTilstand.SpleisLest
-            ),
-            Oppgave(
-                hendelseId = inntektsmeldingHendelseId,
-                dokumentId = inntektsmeldingDokumentId,
-                tilstand = DatabaseTilstand.LagOppgave
-            )
-        )
-        assertEquals(expected, result)
+        assertOppgave(OppdateringstypeDTO.Utsett, inntektsmeldingDokumentId, DokumentTypeDTO.Inntektsmelding, result[0])
+        assertOppgave(OppdateringstypeDTO.Opprett, inntektsmeldingDokumentId, DokumentTypeDTO.Inntektsmelding, result[1])
     }
 
     fun sendtSøknad(

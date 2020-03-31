@@ -18,19 +18,21 @@ class OppgaveDAO(
                 Oppgave(
                     hendelseId = UUID.fromString(rs.string("hendelse_id")),
                     dokumentId = UUID.fromString(rs.string("dokument_id")),
-                    tilstand = DatabaseTilstand.valueOf(rs.string("tilstand"))
+                    tilstand = DatabaseTilstand.valueOf(rs.string("tilstand")),
+                    dokumentType = DokumentType.valueOf(rs.string("dokument_type"))
                 )
             }
             .asSingle
         )
     }
 
-    fun opprettOppgave(hendelseId: UUID, dokumentId: UUID) = using(sessionOf(dataSource)) { session ->
+    fun opprettOppgave(hendelseId: UUID, dokumentId: UUID, dokumentType: DokumentType) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf(
-                "INSERT INTO oppgave_tilstand(hendelse_id, dokument_id) VALUES(?, ?);",
+                "INSERT INTO oppgave_tilstand(hendelse_id, dokument_id, dokument_type) VALUES(?, ?, CAST(? AS dokument_type));",
                 hendelseId,
-                dokumentId
+                dokumentId,
+                dokumentType.name
             ).asUpdate
         )
     }

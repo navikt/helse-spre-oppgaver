@@ -19,16 +19,18 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import net.logstash.logback.argument.StructuredArguments.keyValue
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -46,6 +48,9 @@ val log: Logger = LoggerFactory.getLogger("spreoppgaver")
 fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val serviceUser = readServiceUserCredentials()
     val environment = setUpEnvironment()
+    val datasource = DataSourceBuilder(System.getenv())
+        .apply(DataSourceBuilder::migrate)
+        .getDataSource()
 
     val server = embeddedServer(Netty, 8080) {
         install(MicrometerMetrics) {
@@ -58,9 +63,10 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }.start(wait = false)
 
     val rapidConsumer =
-        KafkaConsumer<ByteArray, JsonNode?>(loadBaseConfig(environment, serviceUser).toConsumerConfig())
+        KafkaConsumer<String, JsonNode?>(loadBaseConfig(environment, serviceUser).toConsumerConfig())
     val oppgaveProducer =
         KafkaProducer<String, OppgaveDTO>(loadBaseConfig(environment, serviceUser).toProducerConfig())
+    val oppgaveDAO = OppgaveDAO(datasource)
 
     rapidConsumer
         .subscribe(listOf(environment.rapidTopic))
@@ -70,13 +76,15 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
             server.stop(10, 10, TimeUnit.SECONDS)
             throw it
         }
+        .oppgaveFlow(oppgaveDAO = oppgaveDAO)
+        .collect { oppgaveProducer.send(ProducerRecord(environment.spreoppgaverTopic, it)) }
 
     Runtime.getRuntime().addShutdownHook(Thread {
         server.stop(10, 10, TimeUnit.SECONDS)
     })
 }
 
-fun Flow<Pair<String, JsonNode>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
+fun Flow<Pair<String, JsonNode?>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
     .map { (_, value) -> value }
     .filterNotNull()
     .filter { it["@event_type"].asText() in listOf("sendt_søknad_nav", "inntektsmelding", "vedtaksperiode_endret") }
@@ -84,19 +92,24 @@ fun Flow<Pair<String, JsonNode>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
     .map { håndter(it, oppgaveDAO) }
     .filterNotNull()
 
-fun håndter(input: RiverInput, oppgaveDAO: OppgaveDAO): Oppgave? {
+fun håndter(input: Hendelse, oppgaveDAO: OppgaveDAO): OppgaveDTO? {
     return when (input) {
-        is RiverInput.NyttDokument -> {
+        is Hendelse.NyttDokument -> {
             if (oppgaveDAO.finnOppgave(input.hendelseId) == null) {
-                oppgaveDAO.opprettOppgave(input.hendelseId, input.dokumentId)
+                oppgaveDAO.opprettOppgave(input.hendelseId, input.dokumentId, input.dokumentType)
             }
             null
         }
-        is RiverInput.Tilstandsendring -> {
+        is Hendelse.Tilstandsendring -> {
             val oppgave = oppgaveDAO.finnOppgave(input.hendelseId) ?: return null
             if (oppgave.tilstand.godtarOvergang(input.tilTilstand)) {
                 oppgaveDAO.oppdaterTilstand(input.hendelseId, input.tilTilstand)
-                oppgave.copy(tilstand = input.tilTilstand)
+                OppgaveDTO(
+                    dokumentType = oppgave.dokumentType.toDTO(),
+                    oppdateringstype = input.tilTilstand.toDTO(),
+                    dokumentId = oppgave.dokumentId,
+                    timeout = LocalDateTime.now().plusDays(14)
+                )
             } else {
                 null
             }
@@ -104,34 +117,45 @@ fun håndter(input: RiverInput, oppgaveDAO: OppgaveDAO): Oppgave? {
     }
 }
 
-fun konverterTilRiverInput(node: JsonNode): List<RiverInput> {
-    val eventType = node["@event_type"].asText()
-    return when (eventType) {
-        "sendt_søknad_nav" -> listOf(RiverInput.NyttDokument(
-            hendelseId = UUID.fromString(node["@id"].asText()),
-            dokumentId = UUID.fromString(node["id"].asText())
-        ))
-        "inntektsmelding" -> listOf(RiverInput.NyttDokument(
-            hendelseId = UUID.fromString(node["@id"].asText()),
-            dokumentId = UUID.fromString(node["inntektsmeldingId"].asText())
-        ))
-        "vedtaksperiode_endret" -> node["hendelser"].map {
-            RiverInput.Tilstandsendring(
-                hendelseId = UUID.fromString(it.asText()),
-                tilstand = node["gjeldendeTilstand"].asText()
-            )
-        }
-        else -> error("Prøver å tolke en event-type vi ikke forstår: $eventType")
-    }
+private fun DatabaseTilstand.toDTO(): OppdateringstypeDTO = when (this) {
+    DatabaseTilstand.SpleisFerdigbehandlet -> OppdateringstypeDTO.Ferdigbehandlet
+    DatabaseTilstand.LagOppgave -> OppdateringstypeDTO.Opprett
+    DatabaseTilstand.SpleisLest -> OppdateringstypeDTO.Utsett
+    else -> error("skal ikke legge melding på topic om at dokument er oppdaget")
 }
 
-sealed class RiverInput {
+
+fun konverterTilRiverInput(node: JsonNode) = when (val eventType = node["@event_type"].asText()) {
+    "sendt_søknad_nav" -> listOf(
+        Hendelse.NyttDokument(
+            hendelseId = UUID.fromString(node["@id"].asText()),
+            dokumentId = UUID.fromString(node["id"].asText()),
+            dokumentType = DokumentType.Søknad
+        )
+    )
+    "inntektsmelding" -> listOf(
+        Hendelse.NyttDokument(
+            hendelseId = UUID.fromString(node["@id"].asText()),
+            dokumentId = UUID.fromString(node["inntektsmeldingId"].asText()),
+            dokumentType = DokumentType.Inntektsmelding
+        )
+    )
+    "vedtaksperiode_endret" -> node["hendelser"].map {
+        Hendelse.Tilstandsendring(
+            hendelseId = UUID.fromString(it.asText()),
+            tilstand = node["gjeldendeTilstand"].asText()
+        )
+    }
+    else -> error("Prøver å tolke en event-type vi ikke forstår: $eventType")
+}
+
+sealed class Hendelse {
     abstract val tilTilstand: DatabaseTilstand
 
     data class Tilstandsendring(
         val hendelseId: UUID,
         val tilstand: String
-    ) : RiverInput() {
+    ) : Hendelse() {
         override val tilTilstand: DatabaseTilstand = when (tilstand) {
             "TIL_INFOTRYGD" -> DatabaseTilstand.LagOppgave
             "AVSLUTTET" -> DatabaseTilstand.SpleisFerdigbehandlet
@@ -141,13 +165,9 @@ sealed class RiverInput {
 
     data class NyttDokument(
         val hendelseId: UUID,
-        val dokumentId: UUID
-    ) : RiverInput() {
+        val dokumentId: UUID,
+        val dokumentType: DokumentType
+    ) : Hendelse() {
         override val tilTilstand: DatabaseTilstand = DatabaseTilstand.DokumentOppdaget
     }
 }
-
-data class OppgaveDTO(
-    val type: String,
-    val dokumentId: UUID
-)
