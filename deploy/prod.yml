@@ -11,11 +11,11 @@ spec:
   strategy:
     type: Recreate
   liveness:
-    path: /is_alive
-    initialDelay: 60
+    path: /isalive
+    initialDelay: 20
   readiness:
-    path: /is_ready
-    initialDelay: 60
+    path: /isready
+    initialDelay: 20
   resources:
     limits:
       cpu: 200m
