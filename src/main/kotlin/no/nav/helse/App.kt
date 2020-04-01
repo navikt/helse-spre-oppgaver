@@ -89,7 +89,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 fun Flow<Pair<String, JsonNode?>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
     .map { (_, value) -> value }
     .filterNotNull()
-    .filter { it["@event_type"].asText() in listOf("sendt_søknad_nav", "inntektsmelding", "vedtaksperiode_endret") }
+    .filter { it["@event_type"]?.asText() in listOf("sendt_søknad_nav", "inntektsmelding", "vedtaksperiode_endret") }
     .onEach {
         log.info(
             "Innkommende hendelse med {} og {}",
@@ -109,21 +109,21 @@ fun Flow<Pair<String, JsonNode?>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
         )
     }
 
-fun håndter(input: Hendelse, oppgaveDAO: OppgaveDAO): OppgaveDTO? {
-    return when (input) {
+fun håndter(hendelse: Hendelse, oppgaveDAO: OppgaveDAO): OppgaveDTO? {
+    return when (hendelse) {
         is Hendelse.NyttDokument -> {
-            if (oppgaveDAO.finnOppgave(input.hendelseId) == null) {
-                oppgaveDAO.opprettOppgave(input.hendelseId, input.dokumentId, input.dokumentType)
+            if (oppgaveDAO.finnOppgave(hendelse.hendelseId) == null) {
+                oppgaveDAO.opprettOppgave(hendelse.hendelseId, hendelse.dokumentId, hendelse.dokumentType)
             }
             null
         }
         is Hendelse.Tilstandsendring -> {
-            val oppgave = oppgaveDAO.finnOppgave(input.hendelseId) ?: return null
-            if (oppgave.tilstand.godtarOvergang(input.tilTilstand)) {
-                oppgaveDAO.oppdaterTilstand(input.hendelseId, input.tilTilstand)
+            val oppgave = oppgaveDAO.finnOppgave(hendelse.hendelseId) ?: return null
+            if (oppgave.tilstand.godtarOvergang(hendelse.tilTilstand)) {
+                oppgaveDAO.oppdaterTilstand(hendelse.hendelseId, hendelse.tilTilstand)
                 OppgaveDTO(
                     dokumentType = oppgave.dokumentType.toDTO(),
-                    oppdateringstype = input.tilTilstand.toDTO(),
+                    oppdateringstype = hendelse.tilTilstand.toDTO(),
                     dokumentId = oppgave.dokumentId,
                     timeout = LocalDateTime.now().plusDays(14)
                 )

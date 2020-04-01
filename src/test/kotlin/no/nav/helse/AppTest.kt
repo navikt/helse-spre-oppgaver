@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AppTest {
@@ -110,7 +111,7 @@ class AppTest {
     }
 
     @Test
-    fun `spleis gir opp behandling av søknad`() = runBlocking<Unit>{
+    fun `spleis gir opp behandling av søknad`() = runBlocking {
         val søknad1HendelseId = UUID.randomUUID()
         val søknad1DokumentId = UUID.randomUUID()
 
@@ -125,7 +126,7 @@ class AppTest {
     }
 
     @Test
-    fun `spleis gir opp behandling i vilkårsprøving`() = runBlocking<Unit>{
+    fun `spleis gir opp behandling i vilkårsprøving`() = runBlocking {
         val inntektsmeldingHendelseId = UUID.randomUUID()
         val inntektsmeldingDokumentId = UUID.randomUUID()
 
@@ -139,6 +140,19 @@ class AppTest {
 
         assertOppgave(OppdateringstypeDTO.Utsett, inntektsmeldingDokumentId, DokumentTypeDTO.Inntektsmelding, result[0])
         assertOppgave(OppdateringstypeDTO.Opprett, inntektsmeldingDokumentId, DokumentTypeDTO.Inntektsmelding, result[1])
+    }
+
+    @Test
+    fun `tåler meldinger som mangler kritiske felter`() = runBlocking {
+        val t = Pair<String, JsonNode>("fnr", objectMapper.convertValue(
+            emptyMap<String, Any>()))
+
+        val res = listOf(t)
+            .asFlow()
+            .oppgaveFlow(oppgaveDAO)
+            .toList()
+
+        assertTrue(res.isEmpty())
     }
 
     fun sendtSøknad(
