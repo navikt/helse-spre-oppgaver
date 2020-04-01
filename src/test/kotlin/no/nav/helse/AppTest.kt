@@ -160,7 +160,7 @@ class AppTest {
         dokumentId: UUID = UUID.randomUUID()
     ): Pair<String, JsonNode> = "fnr" to objectMapper.convertValue(
         mapOf(
-            "@event_type" to "sendt_søknad_nav",
+            "@event_name" to "sendt_søknad_nav",
             "@id" to hendelseId,
             "id" to dokumentId
         )
@@ -171,7 +171,7 @@ class AppTest {
         dokumentId: UUID
     ): Pair<String, JsonNode> = "fnr" to objectMapper.convertValue(
         mapOf(
-            "@event_type" to "inntektsmelding",
+            "@event_name" to "inntektsmelding",
             "@id" to hendelseId,
             "inntektsmeldingId" to dokumentId
         )
@@ -182,7 +182,7 @@ class AppTest {
         gjeldendeTilstand: String
     ): Pair<String, JsonNode> = "fnr" to objectMapper.convertValue(
         mapOf(
-            "@event_type" to "vedtaksperiode_endret",
+            "@event_name" to "vedtaksperiode_endret",
             "hendelser" to hendelseIder,
             "gjeldendeTilstand" to gjeldendeTilstand,
             "vedtaksperiodeId" to UUID.randomUUID()

@@ -89,11 +89,11 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 fun Flow<Pair<String, JsonNode?>>.oppgaveFlow(oppgaveDAO: OppgaveDAO) = this
     .map { (_, value) -> value }
     .filterNotNull()
-    .filter { it["@event_type"]?.asText() in listOf("sendt_søknad_nav", "inntektsmelding", "vedtaksperiode_endret") }
+    .filter { it["@event_name"]?.asText() in listOf("sendt_søknad_nav", "inntektsmelding", "vedtaksperiode_endret") }
     .onEach {
         log.info(
             "Innkommende hendelse med {} og {}",
-            keyValue("type", it["@event_type"].asText()),
+            keyValue("type", it["@event_name"].asText()),
             keyValue("referanse", it["@id"]?.asText() ?: it["vedtaksperiodeId"].asText())
         )
     }
@@ -142,7 +142,7 @@ private fun DatabaseTilstand.toDTO(): OppdateringstypeDTO = when (this) {
 }
 
 
-fun hendelse(node: JsonNode) = when (val eventType = node["@event_type"].asText()) {
+fun hendelse(node: JsonNode) = when (val eventType = node["@event_name"].asText()) {
     "sendt_søknad_nav" -> listOf(
         Hendelse.NyttDokument(
             hendelseId = UUID.fromString(node["@id"].asText()),
