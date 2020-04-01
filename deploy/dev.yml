@@ -12,10 +12,10 @@ spec:
     type: Recreate
   liveness:
     path: /is_alive
-    initialDelay: 20
+    initialDelay: 60
   readiness:
     path: /is_ready
-    initialDelay: 20
+    initialDelay: 60
   resources:
     limits:
       cpu: 200m
