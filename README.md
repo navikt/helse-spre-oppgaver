@@ -8,3 +8,6 @@ Styrer oppretting av oppgaver i gosys
 * JDK 12
 * Kafka
 * Postgres
+
+## For konsumenter:
+OppgaveDTO dekker utgående meldinger
