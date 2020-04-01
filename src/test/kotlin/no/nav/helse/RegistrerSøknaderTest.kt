@@ -1,22 +1,32 @@
 package no.nav.helse
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.netty.handler.codec.MessageAggregationException
+import no.nav.helse.rapids_rivers.InMemoryRapid
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.MessageProblems
+import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.rapids_rivers.inMemoryRapid
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class OppgaveDAOTest {
+class RegistrerSøknaderTest {
     private lateinit var embeddedPostgres: EmbeddedPostgres
     private lateinit var hikariConfig: HikariConfig
     private lateinit var dataSource: HikariDataSource
     private lateinit var oppgaveDAO: OppgaveDAO
+    private lateinit var registrerSøknader: RegistrerSøknader
+    private val inmemoryrapid = inMemoryRapid {}
 
     @BeforeAll
     fun setup() {
@@ -39,25 +49,29 @@ internal class OppgaveDAOTest {
             .migrate()
 
         oppgaveDAO = OppgaveDAO(dataSource)
+
+
+        registrerSøknader = RegistrerSøknader(inmemoryrapid, oppgaveDAO)
     }
 
     @Test
-    fun `finner ikke en ikke-eksisterende oppgave`() {
-        assertNull(oppgaveDAO.finnOppgave(hendelseId = UUID.randomUUID()))
-    }
-
-    @Test
-    fun `finner en eksisterende oppgave`() {
+    fun `dytter søknader inn i db`() {
         val hendelseId = UUID.randomUUID()
-        val dokumentId = UUID.randomUUID()
-        oppgaveDAO.opprettOppgave(
-            hendelseId = hendelseId,
-            dokumentId = dokumentId,
-            dokumentType = DokumentType.Søknad
-        )
-        assertEquals(
-            Oppgave(hendelseId = hendelseId, dokumentId = dokumentId, tilstand = DatabaseTilstand.DokumentOppdaget, dokumentType = DokumentType.Søknad),
-            oppgaveDAO.finnOppgave(hendelseId)
-        )
+        inmemoryrapid.sendToListeners(sendtSøknad(hendelseId))
+
+        val oppgave = oppgaveDAO.finnOppgave(hendelseId)
+        assertNotNull(oppgave)
+        assertEquals(DokumentType.Søknad, oppgave!!.dokumentType)
     }
 }
+
+fun sendtSøknad(
+    hendelseId: UUID,
+    dokumentId: UUID = UUID.randomUUID()
+): String =
+    """{
+            "@event_name": "sendt_søknad_nav",
+            "@id": "$hendelseId",
+            "id": "$dokumentId"
+        }"""
+
