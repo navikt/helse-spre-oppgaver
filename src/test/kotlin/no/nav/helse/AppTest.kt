@@ -183,7 +183,7 @@ class AppTest {
     ): Pair<String, JsonNode> = "fnr" to objectMapper.convertValue(
         mapOf(
             "@event_name" to "vedtaksperiode_endret",
-            "hendelser" to hendelseIder,
+            "hendelsesIder" to hendelseIder,
             "gjeldendeTilstand" to gjeldendeTilstand,
             "vedtaksperiodeId" to UUID.randomUUID()
         )

@@ -157,7 +157,7 @@ fun hendelse(node: JsonNode) = when (val eventType = node["@event_name"].asText(
             dokumentType = DokumentType.Inntektsmelding
         )
     )
-    "vedtaksperiode_endret" -> node["hendelser"].map {
+    "vedtaksperiode_endret" -> node["hendelsesIder"].map {
         Hendelse.Tilstandsendring(
             hendelseId = UUID.fromString(it.asText()),
             tilstand = node["gjeldendeTilstand"].asText()
