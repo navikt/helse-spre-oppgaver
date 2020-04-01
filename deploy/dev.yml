@@ -33,7 +33,7 @@ spec:
   vault:
     enabled: true
     paths:
-      - mountPath: /var/run/secrets/nais.io/vault
+      - mountPath: /var/run/secrets/nais.io/service_user
         kvPath: /serviceuser/data/dev/srvspreoppgaver
   env:
     - name: KAFKA_BOOTSTRAP_SERVERS
