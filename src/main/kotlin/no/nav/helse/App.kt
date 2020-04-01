@@ -20,7 +20,6 @@ fun main() {
 fun launchApplication(
     environment: Map<String, String>
 ): RapidsConnection {
-
     val serviceUser = readServiceUserCredentials()
     val datasource = DataSourceBuilder(System.getenv())
         .apply(DataSourceBuilder::migrate)
