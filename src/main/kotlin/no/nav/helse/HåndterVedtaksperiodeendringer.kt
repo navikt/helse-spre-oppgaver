@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
@@ -54,6 +55,7 @@ class HåndterVedtaksperiodeendringer(
             .forEach { oppgave ->
                 when (packet["gjeldendeTilstand"].asText()) {
                     "TIL_INFOTRYGD" -> Hendelse.TilInfotrygd
+                    "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING",
                     "AVSLUTTET" -> Hendelse.Avsluttet
                     else -> Hendelse.Lest
                 }.accept(oppgave)
@@ -74,6 +76,10 @@ class HåndterVedtaksperiodeendringer(
                     timeout = LocalDateTime.now().plusDays(14)
                 )
             )
+        )
+        log.info("Publisert oppgave på ${oppgave.dokumentType.name} i tilstand: ${oppgave.tilstand} med ider: {}, {}",
+            keyValue("hendelseId", oppgave.hendelseId),
+            keyValue("dokumentId", oppgave.dokumentId)
         )
     }
 

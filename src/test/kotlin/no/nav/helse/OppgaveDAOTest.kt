@@ -49,7 +49,7 @@ internal class OppgaveDAOTest {
     fun `finner en eksisterende oppgave`() {
         val hendelseId = UUID.randomUUID()
         val dokumentId = UUID.randomUUID()
-        oppgaveDAO.opprettOppgave(
+        oppgaveDAO.opprettOppgaveHvisNy(
             hendelseId = hendelseId,
             dokumentId = dokumentId,
             dokumentType = DokumentType.Søknad

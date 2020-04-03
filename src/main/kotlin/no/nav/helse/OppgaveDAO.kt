@@ -38,11 +38,11 @@ class OppgaveDAO(
         )
     }
 
-    fun opprettOppgave(hendelseId: UUID, dokumentId: UUID, dokumentType: DokumentType) =
+    fun opprettOppgaveHvisNy(hendelseId: UUID, dokumentId: UUID, dokumentType: DokumentType) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
-                    "INSERT INTO oppgave_tilstand(hendelse_id, dokument_id, dokument_type) VALUES(?, ?, CAST(? AS dokument_type));",
+                    "INSERT INTO oppgave_tilstand(hendelse_id, dokument_id, dokument_type) VALUES(?, ?, CAST(? AS dokument_type)) ON CONFLICT (hendelse_id) DO NOTHING;",
                     hendelseId,
                     dokumentId,
                     dokumentType.name

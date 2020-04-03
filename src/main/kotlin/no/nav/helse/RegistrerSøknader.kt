@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
@@ -19,8 +20,7 @@ class RegistrerSøknader(rapidsConnection: RapidsConnection, private val oppgave
         val hendelseId = UUID.fromString(packet["@id"].asText())
         val dokumentId = UUID.fromString(packet["id"].asText())
 
-        if (oppgaveDAO.finnOppgave(hendelseId) == null) {
-            oppgaveDAO.opprettOppgave(hendelseId, dokumentId, DokumentType.Søknad)
-        }
+        oppgaveDAO.opprettOppgaveHvisNy(hendelseId, dokumentId, DokumentType.Søknad)
+        log.info("Søknad oppdaget: {} og {}", keyValue("hendelseId", hendelseId), keyValue("dokumentId", dokumentId))
     }
 }

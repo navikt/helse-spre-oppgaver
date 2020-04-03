@@ -60,6 +60,10 @@ class Oppgave(
                 oppgave.tilstand(SpleisLest)
             }
         }
+
+        override fun toString(): String {
+            return this.javaClass.simpleName
+        }
     }
 }
 
