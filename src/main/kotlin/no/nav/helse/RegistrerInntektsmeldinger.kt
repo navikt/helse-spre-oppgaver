@@ -1,11 +1,13 @@
 package no.nav.helse
 
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import java.util.UUID
 
-class RegistrerInntektsmeldinger(rapidsConnection: RapidsConnection, private val oppgaveDAO: OppgaveDAO): River.PacketListener{
+class RegistrerInntektsmeldinger(rapidsConnection: RapidsConnection, private val oppgaveDAO: OppgaveDAO) :
+    River.PacketListener {
     init {
         River(rapidsConnection).apply {
             validate { it.requireKey("@id") }
@@ -18,8 +20,7 @@ class RegistrerInntektsmeldinger(rapidsConnection: RapidsConnection, private val
         val hendelseId = UUID.fromString(packet["@id"].asText())
         val dokumentId = UUID.fromString(packet["inntektsmeldingId"].asText())
 
-        if (oppgaveDAO.finnOppgave(hendelseId) == null) {
-            oppgaveDAO.opprettOppgave(hendelseId, dokumentId, DokumentType.Inntektsmelding)
-        }
+        oppgaveDAO.opprettOppgaveHvisNy(hendelseId, dokumentId, DokumentType.Inntektsmelding)
+        log.info("Inntektsmelding oppdaget: {} og {}", keyValue("hendelseId", hendelseId), keyValue("dokumentId", dokumentId))
     }
 }

@@ -4,12 +4,11 @@ import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class OppgaveDAOTest {
@@ -50,14 +49,32 @@ internal class OppgaveDAOTest {
     fun `finner en eksisterende oppgave`() {
         val hendelseId = UUID.randomUUID()
         val dokumentId = UUID.randomUUID()
-        oppgaveDAO.opprettOppgave(
+        oppgaveDAO.opprettOppgaveHvisNy(
             hendelseId = hendelseId,
             dokumentId = dokumentId,
             dokumentType = DokumentType.Søknad
         )
+        val oppgave = oppgaveDAO.finnOppgave(hendelseId)
+        assertNotNull(oppgave)
         assertEquals(
-            Oppgave(hendelseId = hendelseId, dokumentId = dokumentId, tilstand = DatabaseTilstand.DokumentOppdaget, dokumentType = DokumentType.Søknad),
-            oppgaveDAO.finnOppgave(hendelseId)
+            hendelseId = hendelseId,
+            dokumentId = dokumentId,
+            tilstand = Oppgave.Tilstand.DokumentOppdaget,
+            dokumentType = DokumentType.Søknad,
+            oppgave = requireNotNull(oppgave)
         )
+    }
+
+    private fun assertEquals(
+        hendelseId: UUID,
+        dokumentId: UUID,
+        tilstand: Oppgave.Tilstand,
+        dokumentType: DokumentType,
+        oppgave: Oppgave
+    ) {
+        assertEquals(hendelseId, oppgave.hendelseId)
+        assertEquals(dokumentId, oppgave.dokumentId)
+        assertEquals(tilstand, oppgave.tilstand)
+        assertEquals(dokumentType, oppgave.dokumentType)
     }
 }

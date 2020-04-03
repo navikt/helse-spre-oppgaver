@@ -1,13 +1,10 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.rapids_rivers.inMemoryRapid
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -165,6 +162,25 @@ class EndToEndTest {
         sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_VILKÅRSPRØVING")
 
         assertTrue(captureslot.isEmpty())
+    }
+
+    @Test
+    fun `vedtaksperiode avsluttes uten utbetaling med inntektsmelding`() {
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingDokumentId = UUID.randomUUID()
+
+        val søknadHendelseId = UUID.randomUUID()
+        val søknadDokumentId = UUID.randomUUID()
+
+        sendVedtaksperiodeEndret(listOf(søknadHendelseId), "MOTTATT_SYKMELDING_FERDIG_GAP")
+        sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_SØKNAD_FERDIG_GAP")
+        sendSøknad(søknadHendelseId, søknadDokumentId)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING")
+
+        assertOppgave(OppdateringstypeDTO.Utsett, inntektsmeldingDokumentId, DokumentTypeDTO.Inntektsmelding, captureslot[0].value())
+        assertOppgave(OppdateringstypeDTO.Ferdigbehandlet, inntektsmeldingDokumentId, DokumentTypeDTO.Inntektsmelding, captureslot[1].value())
+        assertEquals(2, (captureslot.size))
     }
 
     private fun assertOppgave(
