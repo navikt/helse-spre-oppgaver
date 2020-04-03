@@ -18,12 +18,12 @@ class Oppgave(
         fun publiser(oppgave: Oppgave) {}
     }
 
-    fun håndter(nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.DokumentOppdaget) =
-        tilstand.håndter(this, nyTilstand)
+    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.DokumentOppdaget) =
+        tilstand.håndter(this, hendelse)
 
-    fun håndter(nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.LagOppgave) = tilstand.håndter(this, nyTilstand)
-    fun håndter(nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.Avsluttet) = tilstand.håndter(this, nyTilstand)
-    fun håndter(nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.Lest) = tilstand.håndter(this, nyTilstand)
+    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) = tilstand.håndter(this, hendelse)
+    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) = tilstand.håndter(this, hendelse)
+    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) = tilstand.håndter(this, hendelse)
 
     private fun tilstand(tilstand: Tilstand) {
         this.tilstand = tilstand
@@ -36,31 +36,31 @@ class Oppgave(
             oppgave.observer?.publiser(oppgave)
         }
 
-        open fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.DokumentOppdaget) {}
-        open fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.LagOppgave) {}
-        open fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.Avsluttet) {}
-        open fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.Lest) {}
+        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.DokumentOppdaget) {}
+        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {}
+        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {}
+        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) {}
 
         object SpleisFerdigbehandlet : Tilstand()
         object LagOppgave : Tilstand()
 
         object SpleisLest : Tilstand() {
-            override fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.LagOppgave) {
+            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {
                 oppgave.tilstand(LagOppgave)
             }
 
-            override fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.Avsluttet) {
+            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {
                 oppgave.tilstand(SpleisFerdigbehandlet)
             }
         }
 
         object DokumentOppdaget : Tilstand() {
             override fun entring(oppgave: Oppgave) {}
-            override fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.LagOppgave) {
+            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {
                 oppgave.tilstand(LagOppgave)
             }
 
-            override fun håndter(oppgave: Oppgave, nyTilstand: HåndterVedtaksperiodeendringer.Tilstand.Lest) {
+            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) {
                 oppgave.tilstand(SpleisLest)
             }
         }

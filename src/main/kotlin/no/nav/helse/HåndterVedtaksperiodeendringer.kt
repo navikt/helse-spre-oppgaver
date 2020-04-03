@@ -24,28 +24,28 @@ class HåndterVedtaksperiodeendringer(
         }.register(this)
     }
 
-    sealed class Tilstand {
+    sealed class Hendelse {
         abstract fun accept(oppgave: Oppgave)
 
-        object DokumentOppdaget : Tilstand() {
+        object DokumentOppdaget : Hendelse() {
             override fun accept(oppgave: Oppgave) {
                 oppgave.håndter(this)
             }
         }
 
-        object LagOppgave : Tilstand() {
+        object TilInfotrygd : Hendelse() {
             override fun accept(oppgave: Oppgave) {
                 oppgave.håndter(this)
             }
         }
 
-        object Avsluttet : Tilstand() {
+        object Avsluttet : Hendelse() {
             override fun accept(oppgave: Oppgave) {
                 oppgave.håndter(this)
             }
         }
 
-        object Lest : Tilstand() {
+        object Lest : Hendelse() {
             override fun accept(oppgave: Oppgave) {
                 oppgave.håndter(this)
             }
@@ -59,9 +59,9 @@ class HåndterVedtaksperiodeendringer(
             .onEach { it.setObserver(this) }
             .forEach { oppgave ->
                 when (packet["gjeldendeTilstand"].asText()) {
-                    "TIL_INFOTRYGD" -> Tilstand.LagOppgave
-                    "AVSLUTTET" -> Tilstand.Avsluttet
-                    else -> Tilstand.Lest
+                    "TIL_INFOTRYGD" -> Hendelse.TilInfotrygd
+                    "AVSLUTTET" -> Hendelse.Avsluttet
+                    else -> Hendelse.Lest
                 }.accept(oppgave)
             }
     }
