@@ -18,9 +18,6 @@ class Oppgave(
         fun publiser(oppgave: Oppgave) {}
     }
 
-    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.DokumentOppdaget) =
-        tilstand.håndter(this, hendelse)
-
     fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) = tilstand.håndter(this, hendelse)
     fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) = tilstand.håndter(this, hendelse)
     fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) = tilstand.håndter(this, hendelse)
@@ -36,7 +33,6 @@ class Oppgave(
             oppgave.observer?.publiser(oppgave)
         }
 
-        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.DokumentOppdaget) {}
         open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {}
         open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {}
         open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) {}

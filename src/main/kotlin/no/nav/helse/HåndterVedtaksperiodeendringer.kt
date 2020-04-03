@@ -27,12 +27,6 @@ class HåndterVedtaksperiodeendringer(
     sealed class Hendelse {
         abstract fun accept(oppgave: Oppgave)
 
-        object DokumentOppdaget : Hendelse() {
-            override fun accept(oppgave: Oppgave) {
-                oppgave.håndter(this)
-            }
-        }
-
         object TilInfotrygd : Hendelse() {
             override fun accept(oppgave: Oppgave) {
                 oppgave.håndter(this)
