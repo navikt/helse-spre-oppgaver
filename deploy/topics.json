@@ -12,6 +12,10 @@
                     "role": "CONSUMER"
                 },
                 {
+                    "member": "srvsyfogsak",
+                    "role": "CONSUMER"
+                },
+                {
                     "member": "N143409",
                     "role": "MANAGER"
                 },
