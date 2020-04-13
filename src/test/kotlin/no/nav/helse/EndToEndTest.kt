@@ -209,12 +209,12 @@ class EndToEndTest {
 
 
 fun vedtaksperiodeEndret(
-    hendelseIder: List<UUID>,
+    hendelser: List<UUID>,
     gjeldendeTilstand: String
 ) =
     """{
             "@event_name": "vedtaksperiode_endret",
-            "hendelsesIder": ${hendelseIder.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
+            "hendelser": ${hendelser.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
             "gjeldendeTilstand": "$gjeldendeTilstand",
             "vedtaksperiodeId": "${UUID.randomUUID()}"
         }"""

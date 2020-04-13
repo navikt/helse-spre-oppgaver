@@ -21,7 +21,7 @@ class HåndterVedtaksperiodeendringer(
         River(rapidsConnection).apply {
             validate { it.requireKey("gjeldendeTilstand") }
             validate { it.requireValue("@event_name", "vedtaksperiode_endret") }
-            validate { it.requireKey("hendelsesIder") }
+            validate { it.requireKey("hendelser") }
         }.register(this)
     }
 
@@ -48,7 +48,7 @@ class HåndterVedtaksperiodeendringer(
     }
 
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
-        packet["hendelsesIder"]
+        packet["hendelser"]
             .map { UUID.fromString(it.asText()) }
             .mapNotNull { oppgaveDAO.finnOppgave(it) }
             .onEach { it.setObserver(this) }
