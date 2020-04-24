@@ -56,6 +56,10 @@ class Oppgave(
                 oppgave.tilstand(LagOppgave)
             }
 
+            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {
+                oppgave.tilstand(SpleisFerdigbehandlet)
+            }
+
             override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) {
                 oppgave.tilstand(SpleisLest)
             }
