@@ -218,16 +218,10 @@ class EndToEndTest {
             DokumentTypeDTO.Inntektsmelding,
             captureslot[0].value()
         )
-        assertOppgave(
-            OppdateringstypeDTO.Ferdigbehandlet,
-            inntektsmeldingDokumentId,
-            DokumentTypeDTO.Inntektsmelding,
-            captureslot[1].value()
-        )
 
-        assertEquals(2, (captureslot.size))
+        assertEquals(1, (captureslot.size))
         assertEquals(1, rapid.inspektør.events("oppgavestyring_utsatt", inntektsmeldingHendelseId).size)
-        assertEquals(1, rapid.inspektør.events("oppgavestyring_ferdigbehandlet", inntektsmeldingHendelseId).size)
+        assertEquals(0, rapid.inspektør.events("oppgavestyring_ferdigbehandlet", inntektsmeldingHendelseId).size)
     }
 
     private fun assertOppgave(
