@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val junitJupiterVersion = "5.5.2"
-val ktorVersion = "1.2.6"
+val ktorVersion = "1.3.2"
 
 plugins {
-    kotlin("jvm") version "1.3.61"
+    kotlin("jvm") version "1.3.72"
 }
 
 group = "no.nav.helse"
@@ -21,11 +21,12 @@ repositories {
             password = githubPassword
         }
     }
-    maven("http://packages.confluent.io/maven/")
+    maven("https://kotlin.bintray.com/ktor")
+    maven("https://packages.confluent.io/maven/")
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.35001d7")
+    implementation("com.github.navikt:rapids-and-rivers:1.74ae9cb")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
 
@@ -49,7 +50,11 @@ java {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "12"
+}
+
+tasks.named<KotlinCompile>("compileTestKotlin") {
+    kotlinOptions.jvmTarget = "12"
 }
 
 tasks.named<Jar>("jar") {
