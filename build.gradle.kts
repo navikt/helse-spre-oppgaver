@@ -1,7 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val junitJupiterVersion = "5.5.2"
-val ktorVersion = "1.3.2"
 
 plugins {
     kotlin("jvm") version "1.3.72"
@@ -27,8 +26,6 @@ repositories {
 
 dependencies {
     implementation("com.github.navikt:rapids-and-rivers:1.74ae9cb")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
 
     implementation("com.zaxxer:HikariCP:3.4.2")
     implementation("no.nav:vault-jdbc:1.3.7")
@@ -39,7 +36,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
 
-    testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.opentable.components:otj-pg-embedded:0.13.3")
 }
