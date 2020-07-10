@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val junitJupiterVersion = "5.5.2"
+val junitJupiterVersion = "5.6.2"
 
 plugins {
     kotlin("jvm") version "1.3.72"
@@ -8,35 +8,25 @@ plugins {
 
 group = "no.nav.helse"
 
-val githubUser: String by project
-val githubPassword: String by project
-
 repositories {
-    mavenCentral()
-    maven {
-        url = uri("https://maven.pkg.github.com/navikt/rapids-and-rivers")
-        credentials {
-            username = githubUser
-            password = githubPassword
-        }
-    }
-    maven("https://kotlin.bintray.com/ktor")
-    maven("https://packages.confluent.io/maven/")
+    jcenter()
+    maven("https://jitpack.io")
+    maven("http://packages.confluent.io/maven/")
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.74ae9cb")
+    implementation("com.github.navikt:rapids-and-rivers:fa839faa1c")
 
-    implementation("com.zaxxer:HikariCP:3.4.2")
+    implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("no.nav:vault-jdbc:1.3.7")
-    implementation("org.flywaydb:flyway-core:6.2.4")
+    implementation("org.flywaydb:flyway-core:6.5.0")
     implementation("com.github.seratch:kotliquery:1.3.1")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
 
-    testImplementation("io.mockk:mockk:1.9.3")
+    testImplementation("io.mockk:mockk:1.10.0")
     testImplementation("com.opentable.components:otj-pg-embedded:0.13.3")
 }
 
