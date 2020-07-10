@@ -4,11 +4,8 @@
 ## Beskrivelse
 Styrer oppretting av oppgaver i gosys
 
-## Kjøretidsavhengigheter
+## Henvendelser
+Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub.
 
-* JDK 12
-* Kafka
-* Postgres
-
-## For konsumenter:
-OppgaveDTO dekker utgående meldinger
+### For NAV-ansatte
+Interne henvendelser kan sendes via Slack i kanalen #område-helse.
