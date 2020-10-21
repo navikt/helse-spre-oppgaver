@@ -74,7 +74,7 @@ class HåndterVedtaksperiodeendringer(
                     dokumentType = oppgave.dokumentType.toDTO(),
                     oppdateringstype = oppgave.tilstand.toDTO(),
                     dokumentId = oppgave.dokumentId,
-                    timeout = LocalDateTime.now().plusDays(14)
+                    timeout = LocalDateTime.now().plusDays(28)
                 )
             )
         )
