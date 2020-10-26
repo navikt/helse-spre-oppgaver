@@ -58,6 +58,7 @@ class HåndterVedtaksperiodeendringer(
                 when (packet["gjeldendeTilstand"].asText()) {
                     "TIL_INFOTRYGD" -> Hendelse.TilInfotrygd
                     "AVSLUTTET" -> Hendelse.Avsluttet
+                    "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING" -> Hendelse.Avsluttet
                     else -> Hendelse.Lest
                 }.accept(oppgave)
             }
