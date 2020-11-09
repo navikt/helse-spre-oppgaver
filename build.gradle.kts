@@ -11,7 +11,6 @@ group = "no.nav.helse"
 repositories {
     jcenter()
     maven("https://jitpack.io")
-    maven("http://packages.confluent.io/maven/")
 }
 
 dependencies {
