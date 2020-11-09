@@ -1,15 +1,8 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.netty.handler.codec.MessageAggregationException
-import no.nav.helse.rapids_rivers.InMemoryRapid
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageProblems
-import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.inMemoryRapid
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -17,7 +10,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RegistrerSøknaderTest {
@@ -71,6 +64,16 @@ fun sendtSøknad(
 ): String =
     """{
             "@event_name": "sendt_søknad_nav",
+            "@id": "$hendelseId",
+            "id": "$dokumentId"
+        }"""
+
+fun sendtArbeidsgiversøknad(
+    hendelseId: UUID,
+    dokumentId: UUID = UUID.randomUUID()
+): String =
+    """{
+            "@event_name": "sendt_søknad_arbeidsgiver",
             "@id": "$hendelseId",
             "id": "$dokumentId"
         }"""

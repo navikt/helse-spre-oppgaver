@@ -199,6 +199,17 @@ class EndToEndTest {
     }
 
     @Test
+    fun `ignorerer avslutting av AG-søknad`() {
+        val søknadArbeidsgiverHendelseId = UUID.randomUUID()
+        val søknadArbeidsgiverDokumentId = UUID.randomUUID()
+
+        sendArbeidsgiversøknad(søknadArbeidsgiverHendelseId, søknadArbeidsgiverDokumentId)
+        sendVedtaksperiodeEndret(listOf(søknadArbeidsgiverHendelseId), "AVSLUTTET_UTEN_UTBETALING")
+
+        assertTrue(captureslot.isEmpty())
+    }
+
+    @Test
     fun `vedtaksperiode avsluttes uten utbetaling med inntektsmelding`() {
         val inntektsmeldingHendelseId = UUID.randomUUID()
         val inntektsmeldingDokumentId = UUID.randomUUID()
@@ -243,6 +254,10 @@ class EndToEndTest {
 
     fun sendSøknad(hendelseId: UUID, dokumentId: UUID = UUID.randomUUID()) {
         rapid.sendTestMessage(sendtSøknad(hendelseId, dokumentId))
+    }
+
+    fun sendArbeidsgiversøknad(hendelseId: UUID, dokumentId: UUID = UUID.randomUUID()) {
+        rapid.sendTestMessage(sendtArbeidsgiversøknad(hendelseId, dokumentId))
     }
 
     fun sendInntektsmelding(hendelseId: UUID, dokumentId: UUID) {
