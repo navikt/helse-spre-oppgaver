@@ -6,6 +6,8 @@ import com.zaxxer.hikari.HikariDataSource
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.helse.DokumentTypeDTO.Inntektsmelding
+import no.nav.helse.OppdateringstypeDTO.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.flywaydb.core.Flyway
@@ -85,23 +87,23 @@ class EndToEndTest {
 
         sendVedtaksperiodeEndret(listOf(søknad1HendelseId, inntektsmeldingHendelseId), "AVSLUTTET")
 
-        assertOppgave(OppdateringstypeDTO.Utsett, søknad1DokumentId, DokumentTypeDTO.Søknad, captureslot[0].value())
+        assertOppgave(Utsett, søknad1DokumentId, DokumentTypeDTO.Søknad, captureslot[0].value())
         assertOppgave(
-            OppdateringstypeDTO.Utsett,
+            Utsett,
             inntektsmeldingDokumentId,
-            DokumentTypeDTO.Inntektsmelding,
+            Inntektsmelding,
             captureslot[1].value()
         )
         assertOppgave(
-            OppdateringstypeDTO.Ferdigbehandlet,
+            Ferdigbehandlet,
             søknad1DokumentId,
             DokumentTypeDTO.Søknad,
             captureslot[2].value()
         )
         assertOppgave(
-            OppdateringstypeDTO.Ferdigbehandlet,
+            Ferdigbehandlet,
             inntektsmeldingDokumentId,
-            DokumentTypeDTO.Inntektsmelding,
+            Inntektsmelding,
             captureslot[3].value()
         )
         assertEquals(4, captureslot.size)
@@ -126,9 +128,9 @@ class EndToEndTest {
         sendVedtaksperiodeEndret(listOf(søknad1HendelseId), "AVVENTER_INNTEKTSMELDING_FERDIG_GAP")
         sendVedtaksperiodeEndret(listOf(søknad1HendelseId), "AVSLUTTET")
 
-        assertOppgave(OppdateringstypeDTO.Utsett, søknad1DokumentId, DokumentTypeDTO.Søknad, captureslot[0].value())
+        assertOppgave(Utsett, søknad1DokumentId, DokumentTypeDTO.Søknad, captureslot[0].value())
         assertOppgave(
-            OppdateringstypeDTO.Ferdigbehandlet,
+            Ferdigbehandlet,
             søknad1DokumentId,
             DokumentTypeDTO.Søknad,
             captureslot[1].value()
@@ -148,7 +150,7 @@ class EndToEndTest {
         sendSøknad(søknad1HendelseId, søknad1DokumentId)
         sendVedtaksperiodeEndret(listOf(søknad1HendelseId), "TIL_INFOTRYGD")
 
-        assertOppgave(OppdateringstypeDTO.Opprett, søknad1DokumentId, DokumentTypeDTO.Søknad, captureslot[0].value())
+        assertOppgave(Opprett, søknad1DokumentId, DokumentTypeDTO.Søknad, captureslot[0].value())
         assertEquals(1, captureslot.size)
 
         assertEquals(1, rapid.inspektør.events().size)
@@ -165,15 +167,15 @@ class EndToEndTest {
         sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD")
 
         assertOppgave(
-            OppdateringstypeDTO.Utsett,
+            Utsett,
             inntektsmeldingDokumentId,
-            DokumentTypeDTO.Inntektsmelding,
+            Inntektsmelding,
             captureslot[0].value()
         )
         assertOppgave(
-            OppdateringstypeDTO.Opprett,
+            Opprett,
             inntektsmeldingDokumentId,
-            DokumentTypeDTO.Inntektsmelding,
+            Inntektsmelding,
             captureslot[1].value()
         )
 
@@ -224,21 +226,73 @@ class EndToEndTest {
         sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING")
 
         assertOppgave(
-            OppdateringstypeDTO.Utsett,
+            Utsett,
             inntektsmeldingDokumentId,
-            DokumentTypeDTO.Inntektsmelding,
+            Inntektsmelding,
             captureslot[0].value()
         )
         assertOppgave(
-            OppdateringstypeDTO.Ferdigbehandlet,
+            Ferdigbehandlet,
             inntektsmeldingDokumentId,
-            DokumentTypeDTO.Inntektsmelding,
+            Inntektsmelding,
             captureslot[1].value()
         )
 
         assertEquals(2, captureslot.size)
         assertEquals(1, rapid.inspektør.events("oppgavestyring_utsatt", inntektsmeldingHendelseId).size)
         assertEquals(1, rapid.inspektør.events("oppgavestyring_ferdigbehandlet", inntektsmeldingHendelseId).size)
+    }
+
+    @Test
+    fun `Forkastet oppgave på inntektsmelding skal opprettes`() {
+        val periode1 = UUID.randomUUID()
+        val periode2 = UUID.randomUUID()
+
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingDokumentId = UUID.randomUUID()
+
+        sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode1)
+        sendVedtaksperiodeEndret(
+            listOf(inntektsmeldingHendelseId),
+            "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING",
+            periode1
+        )
+
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode2)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD", periode2)
+
+        assertEquals(3, captureslot.size)
+
+        assertOppgave(Utsett, inntektsmeldingDokumentId, Inntektsmelding, captureslot[0].value())
+        assertOppgave(Ferdigbehandlet, inntektsmeldingDokumentId, Inntektsmelding, captureslot[1].value())
+        assertOppgave(Opprett, inntektsmeldingDokumentId, Inntektsmelding, captureslot[2].value())
+    }
+
+    @Test
+    fun `Sender ikke flere opprett-meldinger hvis vi allerede har forkastet en periode`() {
+        val periode1 = UUID.randomUUID()
+        val periode2 = UUID.randomUUID()
+        val periode3 = UUID.randomUUID()
+
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingDokumentId = UUID.randomUUID()
+
+        sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode1)
+        sendVedtaksperiodeEndret(
+            listOf(inntektsmeldingHendelseId),
+            "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING",
+            periode1
+        )
+
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode2)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD", periode2)
+
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode3)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD", periode3)
+
+        assertEquals(3, captureslot.size)
     }
 
     private fun assertOppgave(
@@ -264,21 +318,26 @@ class EndToEndTest {
         rapid.sendTestMessage(inntektsmelding(hendelseId, dokumentId))
     }
 
-    fun sendVedtaksperiodeEndret(hendelseIder: List<UUID>, tilstand: String) {
-        rapid.sendTestMessage(vedtaksperiodeEndret(hendelseIder, tilstand))
+    fun sendVedtaksperiodeEndret(
+        hendelseIder: List<UUID>,
+        tilstand: String,
+        vedtaksperiodeId: UUID = UUID.randomUUID()
+    ) {
+        rapid.sendTestMessage(vedtaksperiodeEndret(hendelseIder, tilstand, vedtaksperiodeId))
     }
 }
 
 
 fun vedtaksperiodeEndret(
     hendelser: List<UUID>,
-    gjeldendeTilstand: String
+    gjeldendeTilstand: String,
+    vedtaksperiodeId: UUID
 ) =
     """{
             "@event_name": "vedtaksperiode_endret",
             "hendelser": ${hendelser.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
             "gjeldendeTilstand": "$gjeldendeTilstand",
-            "vedtaksperiodeId": "${UUID.randomUUID()}"
+            "vedtaksperiodeId": "$vedtaksperiodeId"
         }"""
 
 

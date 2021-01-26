@@ -37,7 +37,12 @@ class Oppgave(
         open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {}
         open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) {}
 
-        object SpleisFerdigbehandlet : Tilstand()
+        object SpleisFerdigbehandlet : Tilstand() {
+            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {
+                oppgave.tilstand(LagOppgave)
+            }
+        }
+
         object LagOppgave : Tilstand()
 
         object SpleisLest : Tilstand() {
