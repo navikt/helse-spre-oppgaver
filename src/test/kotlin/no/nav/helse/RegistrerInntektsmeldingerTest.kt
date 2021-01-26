@@ -1,11 +1,8 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.helse.rapids_rivers.inMemoryRapid
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
@@ -20,7 +17,7 @@ class RegistrerInntektsmeldingerTest {
     private lateinit var dataSource: HikariDataSource
     private lateinit var oppgaveDAO: OppgaveDAO
     private lateinit var registrerInntektsmeldinger: RegistrerInntektsmeldinger
-    private val inmemoryrapid = inMemoryRapid {}
+    private val testRapid = TestRapid()
 
     @BeforeAll
     fun setup() {
@@ -43,14 +40,14 @@ class RegistrerInntektsmeldingerTest {
             .migrate()
 
         oppgaveDAO = OppgaveDAO(dataSource)
-        registrerInntektsmeldinger = RegistrerInntektsmeldinger(inmemoryrapid, oppgaveDAO)
+        registrerInntektsmeldinger = RegistrerInntektsmeldinger(testRapid, oppgaveDAO)
     }
 
     @Test
     fun `dytter inntektsmelding inn i db`() {
         val hendelseId = UUID.randomUUID()
         val dokumentId = UUID.randomUUID()
-        inmemoryrapid.sendToListeners(inntektsmelding(hendelseId, dokumentId))
+        testRapid.sendTestMessage(inntektsmelding(hendelseId, dokumentId))
 
         val oppgave = oppgaveDAO.finnOppgave(hendelseId)
         Assertions.assertNotNull(oppgave)

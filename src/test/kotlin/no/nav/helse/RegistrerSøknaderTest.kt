@@ -3,7 +3,6 @@ package no.nav.helse
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.helse.rapids_rivers.inMemoryRapid
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -19,7 +18,7 @@ class RegistrerSøknaderTest {
     private lateinit var dataSource: HikariDataSource
     private lateinit var oppgaveDAO: OppgaveDAO
     private lateinit var registrerSøknader: RegistrerSøknader
-    private val inmemoryrapid = inMemoryRapid {}
+    private val testRapid = TestRapid()
 
     @BeforeAll
     fun setup() {
@@ -44,13 +43,13 @@ class RegistrerSøknaderTest {
         oppgaveDAO = OppgaveDAO(dataSource)
 
 
-        registrerSøknader = RegistrerSøknader(inmemoryrapid, oppgaveDAO)
+        registrerSøknader = RegistrerSøknader(testRapid, oppgaveDAO)
     }
 
     @Test
     fun `dytter søknader inn i db`() {
         val hendelseId = UUID.randomUUID()
-        inmemoryrapid.sendToListeners(sendtSøknad(hendelseId))
+        testRapid.sendTestMessage(sendtSøknad(hendelseId))
 
         val oppgave = oppgaveDAO.finnOppgave(hendelseId)
         assertNotNull(oppgave)
