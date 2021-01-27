@@ -42,6 +42,13 @@ class HåndterVedtaksperiodeendringer(
             }
         }
 
+        object AvsluttetUtenUtbetalingMedInntektsmelding : Hendelse() {
+            override fun accept(oppgave: Oppgave) {
+                oppgave.håndter(this)
+            }
+        }
+
+
         object Lest : Hendelse() {
             override fun accept(oppgave: Oppgave) {
                 oppgave.håndter(this)
@@ -59,7 +66,7 @@ class HåndterVedtaksperiodeendringer(
                     "TIL_INFOTRYGD" -> Hendelse.TilInfotrygd
                     "AVSLUTTET" -> Hendelse.Avsluttet
                     "AVSLUTTET_UTEN_UTBETALING" -> Hendelse.Avsluttet
-                    "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING" -> Hendelse.Avsluttet
+                    "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING" -> Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding
                     else -> Hendelse.Lest
                 }.accept(oppgave)
             }
@@ -96,6 +103,7 @@ class HåndterVedtaksperiodeendringer(
     }
 
     private fun Tilstand.toDTO(): OppdateringstypeDTO = when (this) {
+        KortPeriodeFerdigbehandlet -> OppdateringstypeDTO.Ferdigbehandlet
         SpleisFerdigbehandlet -> OppdateringstypeDTO.Ferdigbehandlet
         LagOppgave -> OppdateringstypeDTO.Opprett
         SpleisLest -> OppdateringstypeDTO.Utsett
@@ -106,6 +114,7 @@ class HåndterVedtaksperiodeendringer(
         SpleisFerdigbehandlet -> "oppgavestyring_ferdigbehandlet"
         LagOppgave -> "oppgavestyring_opprett"
         SpleisLest -> "oppgavestyring_utsatt"
+        KortPeriodeFerdigbehandlet -> "oppgavestyring_kort_periode"
         DokumentOppdaget -> error("skal ikke legge melding på topic om at dokument er oppdaget")
     }
 }

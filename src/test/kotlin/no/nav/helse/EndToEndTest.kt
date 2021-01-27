@@ -240,7 +240,7 @@ class EndToEndTest {
 
         assertEquals(2, captureslot.size)
         assertEquals(1, rapid.inspektør.events("oppgavestyring_utsatt", inntektsmeldingHendelseId).size)
-        assertEquals(1, rapid.inspektør.events("oppgavestyring_ferdigbehandlet", inntektsmeldingHendelseId).size)
+        assertEquals(1, rapid.inspektør.events("oppgavestyring_kort_periode", inntektsmeldingHendelseId).size)
     }
 
     @Test
@@ -292,6 +292,68 @@ class EndToEndTest {
         sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode3)
         sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD", periode3)
 
+        assertEquals(3, captureslot.size)
+    }
+
+    @Test
+    fun `Sender kun opprett oppgaver på forkastet inntektsmelding dersom forrige periode var en kort periode`() {
+        val periode1 = UUID.randomUUID()
+        val periode2 = UUID.randomUUID()
+        val periode3 = UUID.randomUUID()
+
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingDokumentId = UUID.randomUUID()
+
+        sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode1)
+        sendVedtaksperiodeEndret(
+            listOf(inntektsmeldingHendelseId),
+            "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING",
+            periode1
+        )
+
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode2)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVSLUTTET", periode2)
+
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode3)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD", periode3)
+
+        assertEquals(Utsett, captureslot[0].value().oppdateringstype)
+        assertEquals(Ferdigbehandlet, captureslot[1].value().oppdateringstype)
+        assertEquals(2, captureslot.size)
+    }
+
+    @Test
+    fun `to korte og en lang periode hvor siste går til infotrygd`() {
+        val periode1 = UUID.randomUUID()
+        val periode2 = UUID.randomUUID()
+        val periode3 = UUID.randomUUID()
+
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingDokumentId = UUID.randomUUID()
+
+        sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode1)
+        sendVedtaksperiodeEndret(
+            listOf(inntektsmeldingHendelseId),
+            "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING",
+            periode1
+        )
+
+        sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingDokumentId)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode2)
+        sendVedtaksperiodeEndret(
+            listOf(inntektsmeldingHendelseId),
+            "AVSLUTTET_UTEN_UTBETALING_MED_INNTEKTSMELDING",
+            periode2
+        )
+
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "AVVENTER_HISTORIKK", periode3)
+        sendVedtaksperiodeEndret(listOf(inntektsmeldingHendelseId), "TIL_INFOTRYGD", periode3)
+
+        assertEquals(Utsett, captureslot[0].value().oppdateringstype)
+        assertEquals(Ferdigbehandlet, captureslot[1].value().oppdateringstype)
+        assertEquals(Opprett, captureslot[2].value().oppdateringstype)
         assertEquals(3, captureslot.size)
     }
 
