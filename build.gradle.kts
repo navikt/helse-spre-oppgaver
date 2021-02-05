@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:1.87c2e60")
+    implementation("com.github.navikt:rapids-and-rivers:1.6d6256d")
 
     implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("no.nav:vault-jdbc:1.3.7")
