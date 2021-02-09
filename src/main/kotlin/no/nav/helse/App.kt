@@ -14,6 +14,7 @@ internal val objectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
 
 internal val log = LoggerFactory.getLogger("helse-spre-oppgaver")
+internal val oppgaveTopicName = "aapen-helse-spre-oppgaver"
 
 fun main() {
     val rapidsConnection = launchApplication(System.getenv())

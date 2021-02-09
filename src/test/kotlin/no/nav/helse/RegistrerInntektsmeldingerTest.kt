@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RegistrerInntektsmeldingerTest {
@@ -53,17 +53,6 @@ class RegistrerInntektsmeldingerTest {
         Assertions.assertNotNull(oppgave)
         Assertions.assertEquals(DokumentType.Inntektsmelding, oppgave!!.dokumentType)
     }
-
-    @Test
-    fun `dytter kjølig inntektsmelding inn i db`() {
-        val hendelseId = UUID.randomUUID()
-        val dokumentId = UUID.randomUUID()
-        testRapid.sendTestMessage(inntektsmeldingLagtPåKjøl(hendelseId, dokumentId))
-
-        val oppgave = oppgaveDAO.finnOppgave(hendelseId)
-        Assertions.assertNotNull(oppgave)
-        Assertions.assertEquals(DokumentType.Inntektsmelding, oppgave!!.dokumentType)
-    }
 }
 
 fun inntektsmelding(
@@ -71,15 +60,6 @@ fun inntektsmelding(
     dokumentId: UUID
 ) = """{
             "@event_name": "inntektsmelding",
-            "@id": "$hendelseId",
-            "inntektsmeldingId": "$dokumentId"
-        }"""
-
-fun inntektsmeldingLagtPåKjøl(
-    hendelseId: UUID,
-    dokumentId: UUID
-) = """{
-            "@event_name": "inntektsmelding_lagt_på_kjøl",
             "@id": "$hendelseId",
             "inntektsmeldingId": "$dokumentId"
         }"""

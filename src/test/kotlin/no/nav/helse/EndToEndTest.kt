@@ -56,7 +56,7 @@ class EndToEndTest {
         RegistrerInntektsmeldinger(rapid, oppgaveDAO)
         RegistrerSøknader(rapid, oppgaveDAO)
         HåndterVedtaksperiodeendringer(rapid, oppgaveDAO, mockProducer)
-
+        HåndterInntektsmeldingLagtPåKjøl(rapid, oppgaveDAO, mockProducer)
     }
 
     @BeforeEach
@@ -357,6 +357,18 @@ class EndToEndTest {
         assertEquals(3, captureslot.size)
     }
 
+    @Test
+    fun `utsetter oppgave for inntektsmelding som ikke treffer noen perioder`() {
+        val inntektsmeldingHendelseId = UUID.randomUUID()
+        val inntektsmeldingId = UUID.randomUUID()
+
+        sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingId)
+        sendInntektsmeldingLagtPåKjøl(inntektsmeldingHendelseId, inntektsmeldingId)
+
+        assertEquals(Utsett, captureslot[0].value().oppdateringstype)
+        assertEquals(1, rapid.inspektør.events("oppgavestyring_utsatt", inntektsmeldingHendelseId).size)
+    }
+
     private fun assertOppgave(
         oppdateringstypeDTO: OppdateringstypeDTO,
         dokumentId: UUID,
@@ -378,6 +390,10 @@ class EndToEndTest {
 
     fun sendInntektsmelding(hendelseId: UUID, dokumentId: UUID) {
         rapid.sendTestMessage(inntektsmelding(hendelseId, dokumentId))
+    }
+
+    fun sendInntektsmeldingLagtPåKjøl(hendelseId: UUID, dokumentId: UUID) {
+        rapid.sendTestMessage(inntektsmeldingLagtPåKjøl(hendelseId, dokumentId))
     }
 
     fun sendVedtaksperiodeEndret(
@@ -402,5 +418,13 @@ fun vedtaksperiodeEndret(
             "vedtaksperiodeId": "$vedtaksperiodeId"
         }"""
 
+fun inntektsmeldingLagtPåKjøl(
+    hendelseId: UUID,
+    dokumentId: UUID
+) = """{
+            "@event_name": "inntektsmelding_lagt_på_kjøl",
+            "hendelseId": "$hendelseId",
+            "inntektsmeldingId": "$dokumentId"
+        }"""
 
 

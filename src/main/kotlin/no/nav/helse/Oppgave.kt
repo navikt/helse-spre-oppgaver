@@ -18,10 +18,10 @@ class Oppgave(
         fun publiser(oppgave: Oppgave) {}
     }
 
-    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) = tilstand.håndter(this, hendelse)
-    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) = tilstand.håndter(this, hendelse)
-    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) = tilstand.håndter(this, hendelse)
-    fun håndter(hendelse: HåndterVedtaksperiodeendringer.Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) = tilstand.håndter(this, hendelse)
+    fun håndter(hendelse: Hendelse.TilInfotrygd) = tilstand.håndter(this, hendelse)
+    fun håndter(hendelse: Hendelse.Avsluttet) = tilstand.håndter(this, hendelse)
+    fun håndter(hendelse: Hendelse.Lest) = tilstand.håndter(this, hendelse)
+    fun håndter(hendelse: Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) = tilstand.håndter(this, hendelse)
 
     private fun tilstand(tilstand: Tilstand) {
         val forrigeTilstand = this.tilstand
@@ -36,10 +36,10 @@ class Oppgave(
             oppgave.observer?.publiser(oppgave)
         }
 
-        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {}
-        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {}
-        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) {}
-        open fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) {}
+        open fun håndter(oppgave: Oppgave, hendelse: Hendelse.TilInfotrygd) {}
+        open fun håndter(oppgave: Oppgave, hendelse: Hendelse.Avsluttet) {}
+        open fun håndter(oppgave: Oppgave, hendelse: Hendelse.Lest) {}
+        open fun håndter(oppgave: Oppgave, hendelse: Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) {}
 
         object SpleisFerdigbehandlet : Tilstand() {
             override fun entering(oppgave: Oppgave, forrigeTilstand: Tilstand) {
@@ -51,43 +51,43 @@ class Oppgave(
         object LagOppgave : Tilstand()
 
         object SpleisLest : Tilstand() {
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.TilInfotrygd) {
                 oppgave.tilstand(LagOppgave)
             }
 
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.Avsluttet) {
                 oppgave.tilstand(SpleisFerdigbehandlet)
             }
 
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) {
                 oppgave.tilstand(KortPeriodeFerdigbehandlet)
             }
         }
 
         object DokumentOppdaget : Tilstand() {
             override fun entering(oppgave: Oppgave, forrigeTilstand: Tilstand) {}
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.TilInfotrygd) {
                 oppgave.tilstand(LagOppgave)
             }
 
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.Avsluttet) {
                 oppgave.tilstand(SpleisFerdigbehandlet)
             }
 
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Lest) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.Lest) {
                 oppgave.tilstand(SpleisLest)
             }
 
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.AvsluttetUtenUtbetalingMedInntektsmelding) {
                 oppgave.tilstand(KortPeriodeFerdigbehandlet)
             }
         }
 
         object KortPeriodeFerdigbehandlet: Tilstand() {
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.TilInfotrygd) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.TilInfotrygd) {
                 oppgave.tilstand(LagOppgave)
             }
-            override fun håndter(oppgave: Oppgave, hendelse: HåndterVedtaksperiodeendringer.Hendelse.Avsluttet) {
+            override fun håndter(oppgave: Oppgave, hendelse: Hendelse.Avsluttet) {
                 oppgave.tilstand(SpleisFerdigbehandlet)
             }
         }

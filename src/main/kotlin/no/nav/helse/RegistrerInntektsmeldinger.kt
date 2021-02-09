@@ -4,7 +4,7 @@ import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
-import java.util.UUID
+import java.util.*
 
 class RegistrerInntektsmeldinger(rapidsConnection: RapidsConnection, private val oppgaveDAO: OppgaveDAO) :
     River.PacketListener {
@@ -12,7 +12,7 @@ class RegistrerInntektsmeldinger(rapidsConnection: RapidsConnection, private val
         River(rapidsConnection).apply {
             validate { it.requireKey("@id") }
             validate { it.requireKey("inntektsmeldingId") }
-            validate { it.requireAny("@event_name", listOf("inntektsmelding", "inntektsmelding_lagt_på_kjøl")) }
+            validate { it.requireValue("@event_name", "inntektsmelding") }
         }.register(this)
     }
 
