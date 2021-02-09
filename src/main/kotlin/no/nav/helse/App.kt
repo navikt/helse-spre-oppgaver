@@ -39,10 +39,17 @@ fun launchApplication(
         )
 
     return RapidApplication.create(environment).apply {
-        RegistrerSøknader(this, oppgaveDAO)
-        RegistrerInntektsmeldinger(this, oppgaveDAO)
-        HåndterVedtaksperiodeendringer(this, oppgaveDAO, oppgaveProducer)
-        HåndterInntektsmeldingLagtPåKjøl(this, oppgaveDAO, oppgaveProducer)
+        registerRivers(oppgaveDAO, oppgaveProducer)
     }
+}
+
+internal fun RapidsConnection.registerRivers(
+    oppgaveDAO: OppgaveDAO,
+    oppgaveProducer: KafkaProducer<String, OppgaveDTO>
+) {
+    RegistrerSøknader(this, oppgaveDAO)
+    RegistrerInntektsmeldinger(this, oppgaveDAO)
+    HåndterVedtaksperiodeendringer(this, oppgaveDAO, oppgaveProducer)
+    HåndterInntektsmeldingLagtPåKjøl(this, oppgaveDAO, oppgaveProducer)
 }
 

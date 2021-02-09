@@ -53,10 +53,7 @@ class EndToEndTest {
 
         oppgaveDAO = OppgaveDAO(dataSource)
 
-        RegistrerInntektsmeldinger(rapid, oppgaveDAO)
-        RegistrerSøknader(rapid, oppgaveDAO)
-        HåndterVedtaksperiodeendringer(rapid, oppgaveDAO, mockProducer)
-        HåndterInntektsmeldingLagtPåKjøl(rapid, oppgaveDAO, mockProducer)
+        rapid.registerRivers(oppgaveDAO, mockProducer)
     }
 
     @BeforeEach
