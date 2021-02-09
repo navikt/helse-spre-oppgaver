@@ -363,7 +363,7 @@ class EndToEndTest {
         val inntektsmeldingId = UUID.randomUUID()
 
         sendInntektsmelding(inntektsmeldingHendelseId, inntektsmeldingId)
-        sendInntektsmeldingLagtPåKjøl(inntektsmeldingHendelseId, inntektsmeldingId)
+        sendInntektsmeldingLagtPåKjøl(inntektsmeldingHendelseId)
 
         assertEquals(Utsett, captureslot[0].value().oppdateringstype)
         assertEquals(1, rapid.inspektør.events("oppgavestyring_utsatt", inntektsmeldingHendelseId).size)
@@ -392,8 +392,8 @@ class EndToEndTest {
         rapid.sendTestMessage(inntektsmelding(hendelseId, dokumentId))
     }
 
-    fun sendInntektsmeldingLagtPåKjøl(hendelseId: UUID, dokumentId: UUID) {
-        rapid.sendTestMessage(inntektsmeldingLagtPåKjøl(hendelseId, dokumentId))
+    fun sendInntektsmeldingLagtPåKjøl(hendelseId: UUID) {
+        rapid.sendTestMessage(inntektsmeldingLagtPåKjøl(hendelseId))
     }
 
     fun sendVedtaksperiodeEndret(
@@ -420,11 +420,9 @@ fun vedtaksperiodeEndret(
 
 fun inntektsmeldingLagtPåKjøl(
     hendelseId: UUID,
-    dokumentId: UUID
 ) = """{
             "@event_name": "inntektsmelding_lagt_på_kjøl",
-            "hendelseId": "$hendelseId",
-            "inntektsmeldingId": "$dokumentId"
+            "hendelseId": "$hendelseId"
         }"""
 
 

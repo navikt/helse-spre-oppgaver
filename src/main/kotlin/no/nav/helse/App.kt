@@ -42,6 +42,7 @@ fun launchApplication(
         RegistrerSøknader(this, oppgaveDAO)
         RegistrerInntektsmeldinger(this, oppgaveDAO)
         HåndterVedtaksperiodeendringer(this, oppgaveDAO, oppgaveProducer)
+        HåndterInntektsmeldingLagtPåKjøl(this, oppgaveDAO, oppgaveProducer)
     }
 }
 
