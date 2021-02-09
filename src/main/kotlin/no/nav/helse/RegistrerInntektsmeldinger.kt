@@ -12,7 +12,7 @@ class RegistrerInntektsmeldinger(rapidsConnection: RapidsConnection, private val
         River(rapidsConnection).apply {
             validate { it.requireKey("@id") }
             validate { it.requireKey("inntektsmeldingId") }
-            validate { it.requireValue("@event_name", "inntektsmelding") }
+            validate { it.requireAny("@event_name", listOf("inntektsmelding", "inntektsmelding_lagt_på_kjøl")) }
         }.register(this)
     }
 
